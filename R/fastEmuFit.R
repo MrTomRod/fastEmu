@@ -42,6 +42,8 @@
 #' @param run_score_tests logical: perform robust score testing? Default is TRUE.
 #' @param verbose provide updates as model is being fitted and score tests are run? Defaults to FALSE.
 #' @param ... Additional arguments to radEmu:::emuFit. See possible arguments with \code{?radEmu::emuFit}.
+#' Reduced-model refits in score tests use \code{tolerance = 1e-3} by default for speed;
+#' pass \code{tolerance} to use a tighter value.
 #'
 #' @return A list that includes all elements of an \code{emuFit} object from \code{radEmu::emuFit()}, as
 #' well as additional elements. See the documentation in \code{?radEmu::emuFit} for a full description of the
@@ -95,7 +97,8 @@ fastEmuFit <- function(reference_set = "data_driven",
   }
 
   # start by getting extra arguments
-  if (!("tolerance" %in% names(extra_args))) {
+  user_tolerance <- "tolerance" %in% names(extra_args)
+  if (!user_tolerance) {
     tolerance <- 1e-4
   } else {
     tolerance <- extra_args$tolerance
@@ -547,9 +550,6 @@ fastEmuFit <- function(reference_set = "data_driven",
       # use estimated B to start
       upd_result <- result
       upd_result$B <- upd_result$B[, ind_keep]
-      if (penalize) {
-        upd_result$Y_augmented <- upd_result$Y_augmented[, ind_keep]
-      }
 
       # remove arguments we don't want for score tests
       inf_args_rm <- which(names(extra_args) %in%
@@ -565,7 +565,7 @@ fastEmuFit <- function(reference_set = "data_driven",
                        penalize = penalize,
                        fitted_model = upd_result,
                        refit = TRUE,
-                       tolerance = max(tolerance, 0.001),
+                       tolerance = if (user_tolerance) tolerance else 1e-3,
                        test_kj = data.frame(k = test_kj$k[i_test],
                                             j = j_ind),
                        return_wald_p = FALSE,

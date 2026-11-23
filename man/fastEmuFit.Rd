@@ -84,7 +84,9 @@ returned if \code{estimate_full_model} is TRUE.}
 
 \item{verbose}{provide updates as model is being fitted and score tests are run? Defaults to FALSE.}
 
-\item{...}{Additional arguments to radEmu:::emuFit. See possible arguments with \code{?radEmu::emuFit}.}
+\item{...}{Additional arguments to radEmu:::emuFit. See possible arguments with \code{?radEmu::emuFit}.
+Reduced-model refits in score tests use \code{tolerance = 1e-3} by default for speed;
+pass \code{tolerance} to use a tighter value.}
 }
 \value{
 A list that includes all elements of an \code{emuFit} object from \code{radEmu::emuFit()}, as
