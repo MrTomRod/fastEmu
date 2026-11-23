@@ -147,6 +147,25 @@ test_that("multiple constraint functions", {
   expect_true(all.equal(mean(res1$B[2, res1$reference_set[[2]]]), 0, tolerance = 1e-6))
 })
 
+test_that("single-reference constraint_fn and reference_set works end to end and validates mismatches", {
+  fit_single <- fastEmuFit(Y = Y, X = X, constraint_fn = 3, reference_set = 3,
+                           test_kj = data.frame(k = 2, j = 6))
+  expect_equal(fit_single$B[1, 3], 0)
+  expect_equal(fit_single$B[2, 3], 0)
+  expect_equal(fit_single$reference_set[[2]], 3)
+  expect_false(is.na(fit_single$coef$score_stat[6]))
+  expect_false(is.na(fit_single$coef$pval[6]))
+  expect_true(fit_single$coef$reference_category[3])
+
+  fit_char <- fastEmuFit(Y = Y, X = X, constraint_fn = 3, reference_set = "taxon3",
+                         test_kj = data.frame(k = 2, j = 6))
+  expect_true(all.equal(fit_single$coef, fit_char$coef))
+
+  expect_error(fastEmuFit(Y = Y, X = X, constraint_fn = 3, reference_set = 2, run_score_tests = FALSE))
+  expect_error(fastEmuFit(Y = Y, X = X, constraint_fn = 3, reference_set = 1:2, run_score_tests = FALSE))
+  expect_error(fastEmuFit(Y = Y, X = X, constraint_fn = 3, reference_set = "data_driven", run_score_tests = FALSE))
+})
+
 
 
 
