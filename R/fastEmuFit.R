@@ -166,6 +166,9 @@ fastEmuFit <- function(reference_set = "data_driven",
   p <- ncol(X)
   old_constraint_fn <- constraint_fn
   if (length(old_constraint_fn) == 1) {
+    if (inherits(old_constraint_fn, "list")) {
+      old_constraint_fn <- old_constraint_fn[[1]]
+    }
     old_constraint_fn <- rep(list(old_constraint_fn), p)
   }
   constraint_fn <- check_results$constraint_fn
@@ -199,7 +202,7 @@ fastEmuFit <- function(reference_set = "data_driven",
       ref_set_names <- NULL
       if (length(ref_set) == 1 && ref_set == "data_driven") {
         ref_set <- "data_driven"
-        if (is.numeric(constraint_fn[[k]])) {
+        if (is.numeric(old_constraint_fn[[k]])) {
           stop("You've set a data-driven reference set, but chosen a constraint function that consists of a single reference category. Please rerun this function, and set `reference_set` to be the index of the taxa that you would like to the be the reference category, or remove the `constraint_fn` argument.")
         }
       } else {
@@ -221,17 +224,19 @@ fastEmuFit <- function(reference_set = "data_driven",
           ref_set <- which(colnames(Y) %in% ref_set)
         }
         if (is.numeric(old_constraint_fn[[k]])) {
-          if (length(ref_set > 1) || ref_set != old_constraint_fn[[k]]) {
+          if (length(ref_set) > 1 || ref_set != old_constraint_fn[[k]]) {
             stop("You've set a single reference taxon for covariate ", k, " with the `constraint_fn` argument but this doesn't match the argument `reference_set` for covariate ", k, ". Please remove one of these arguments.")
           }
+          constraint_fn[[k]] <- function(x) x[1]
+          constraint_grad_fn[[k]] <- function(x) 1
         }
       }
 
       # check on constraint
-      if (length(ref_set) == 1 && ref_set == "data-driven" & is.numeric(constraint_fn[[k]])) {
+      if (length(ref_set) == 1 && ref_set == "data_driven" & is.numeric(old_constraint_fn[[k]])) {
         stop("You've set a data-driven reference set for covariate ", k, ", but chosen a constraint function that consists of a single reference category. Please rerun this function, and set `reference_set` to be the index of the taxa that you would like to the be the reference category, or remove the `constraint_fn` argument.")
-      } else if (is.numeric(constraint_fn[[k]]) & is.numeric(ref_set)) {
-        if (length(ref_set) > 1 || ref_set != constraint_fn) {
+      } else if (is.numeric(old_constraint_fn[[k]]) & is.numeric(ref_set)) {
+        if (length(ref_set) > 1 || ref_set != old_constraint_fn[[k]]) {
           stop("You've set a single reference taxon for covariate ", k, "with the `constraint_fn` argument but this doesn't match the argument `reference_set` for this covariate. Please remove one of these arguments.")
         }
       }
